@@ -43,17 +43,11 @@ int main(int ac, char **av)
     ptr = mmap(0, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (ptr == MAP_FAILED)
         print_err(errno, prg_name, NULL);
-    elf_data.hdr_64 = (Elf64_Ehdr *)ptr;
-    if (((Elf64_Ehdr *)ptr)->e_ident[EI_CLASS] == ELFCLASSNONE)
-    {
-        print_err(0, prg_name, FILE_FORMAT_NOT_RECOGNIZED);
-    }
-    // si pas  0x7fELF, ou avec un format (normalement 32 ou 64) non reconnu -> file format not recognized.
+    //elf_data.hdr_64 = (Elf64_Ehdr *)ptr;
+    // si pas  0x7fELF, ou avec un format (normalement 32 ou 64bits) non reconnu -> file format not recognized.
     if (strncmp(ELFMAG, (const char *)((Elf64_Ehdr *)ptr)->e_ident, SELFMAG) != 0 \
-        || ((Elf64_Ehdr *)ptr)->e_ident[EI_CLASS] == ELFCLASSNONE)
-    {
-        printf("This is an elf. w00t\n");
-    }
+        || ((Elf64_Ehdr *)ptr)->e_ident[EI_CLASS] != 1 || ((Elf64_Ehdr *)ptr)->e_ident[EI_CLASS] != 2)
+        print_err(0, prg_name, FILE_FORMAT_NOT_RECOGNIZED);
     munmap(ptr, buf.st_size);/* on libere l'espace memoire alloue par le kernel */
     close(fd);
     return (EXIT_SUCCESS);
