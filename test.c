@@ -1,1 +1,1 @@
-int main(){printf("Hrllo\n");}
+int main(){}
