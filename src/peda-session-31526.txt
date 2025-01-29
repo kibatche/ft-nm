@@ -1,4 +1,0 @@
-break main
-break main.c:32
-
-set exec-wrapper logging enabled

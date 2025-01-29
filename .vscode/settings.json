@@ -65,6 +65,9 @@
     "errno.h": "c",
     "stdlib.h": "c",
     "stdio.h": "c",
-    "libft.h": "c"
+    "libft.h": "c",
+    "endian.h": "c",
+    "ft_nm.h": "c",
+    "byteswap.h": "c"
   }
 }
