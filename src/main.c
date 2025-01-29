@@ -185,6 +185,7 @@ uint32_t convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_e
 void isValidElfFile(void *ptr, char *prg_name, ELF_datas *elf_datas)
 {
     unsigned char *tmp = (unsigned char *)ptr;// on cast en unsigned tant qu'on ne sait si 32 ou 64 bits
+
     if (strncmp(ELFMAG, (const char *)tmp, SELFMAG) != 0)// est-ce que les 4 premiers bytes == \177ELF ?
         print_err(0, FILE_FORMAT_NOT_RECOGNIZED);
     if (tmp[EI_CLASS] != ELFCLASS64 && tmp[EI_CLASS] != ELFCLASS32)
