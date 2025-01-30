@@ -10,7 +10,7 @@
 #                                                                              #
 # **************************************************************************** #
 
-GCC = clang
+CC = clang
 CCFLAGS = -c -Wall -Wextra -Werror -g
 RM = rm -f
 
@@ -51,11 +51,11 @@ NAME = libft.a
 
 all: ${NAME}
 
-$(NAME): ${OBJS}
+${NAME}: ${OBJS}
 	ar -rcs ${NAME} ${OBJS}
 
 %.o: %.c
-	${GCC} ${CCFLAGS} $< -o $@ -I .
+	${CC} ${CCFLAGS} $< -o $@ -I .
 
 bonus:	${NAME}
 

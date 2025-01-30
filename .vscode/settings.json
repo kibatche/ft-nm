@@ -68,6 +68,7 @@
     "libft.h": "c",
     "endian.h": "c",
     "ft_nm.h": "c",
-    "byteswap.h": "c"
+    "byteswap.h": "c",
+    "mman.h": "c"
   }
 }

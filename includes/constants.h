@@ -14,4 +14,7 @@
 # define BAD_HEADER_SIZE "bad header size"
 # define SIZE_OF_THE_FILE_MISMATCH "size of the file mismatch"
 # define WRONG_NB_OF_ENTRIES "wrong number of entries inside section table"
+# define BAD_INDEX_FOR_STRING_TABLE "bad index for e_shstrndx entry"
+# define NO_SYMBOL "no symbol"
+# define NO_SHSTRTAB "no string table"
 #endif

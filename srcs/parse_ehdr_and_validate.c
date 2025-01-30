@@ -1,33 +1,7 @@
-#include <sys/mman.h> /* munmap, mmap */
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <endian.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <elf.h>
-#include "../libft/libft.h"
 #include "../includes/ft_nm.h"
-#include "../includes/constants.h"
 
-char *prg_name;
-struct stat buf;
-int fd;
-void *ptr;
-
-void print_err(int e, char *err_string)
-{
-    char *s = strerror(e);
-    write(2, ERR_PRES, 7);
-    write(2, prg_name, strlen(prg_name));
-    write(2, PRG_NAME_ENDING_ERR, 3);
-    err_string ? write(2, err_string, strlen(err_string)) : write(2, s, strlen(s));
-    write(2, LF, 1);
-    munmap(ptr, buf.st_size);
-    close(fd);
-    exit(EXIT_FAILURE);
-}
+extern struct stat buf;
+extern void *ptr;
 
 int check_current_machine_endianess()
 {
@@ -67,6 +41,21 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
                     print_err(0, WRONG_NB_OF_ENTRIES);
                 }
             }
+            elf_datas->shstrndx = be16toh(elf_datas->hdr_64->e_shstrndx);
+            if (elf_datas->shstrndx >= SHN_LORESERVE)
+            {
+                if (elf_datas->shstrndx == 0xffff && be16toh(elf_datas->shdr_64->sh_link) >= SHN_LORESERVE)
+                {
+                    elf_datas->shstrndx = be16toh(elf_datas->shdr_64->sh_link);
+                }
+                else
+                {
+                    print_err(0, BAD_INDEX_FOR_STRING_TABLE);
+                }
+            }
+            elf_datas->shstrtab_64 = (Elf64_Shdr *)&elf_datas->shdr_64[elf_datas->shstrndx];
+            if (elf_datas->shstrtab_64 == NULL)
+                print_err(0, NO_SYMBOL);
         }
         else if (file_endianess == ELFDATA2LSB)
         {
@@ -87,6 +76,21 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
                     print_err(0, WRONG_NB_OF_ENTRIES);
                 }
             }
+            elf_datas->shstrndx = le16toh(elf_datas->hdr_64->e_shstrndx);
+            if (elf_datas->shstrndx >= SHN_LORESERVE)
+            {
+                if (elf_datas->shstrndx == 0xffff && le16toh(elf_datas->shdr_64->sh_link) >= SHN_LORESERVE)
+                {
+                    elf_datas->shstrndx = le16toh(elf_datas->shdr_64->sh_link);
+                }
+                else
+                {
+                    print_err(0, BAD_INDEX_FOR_STRING_TABLE);
+                }
+            }
+            elf_datas->shstrtab_64 = (Elf64_Shdr *)&elf_datas->shdr_64[elf_datas->shstrndx];
+            if (elf_datas->shstrtab_64 == NULL)
+                print_err(0, NO_SYMBOL);
         }
     }
     else
@@ -108,10 +112,40 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
                 print_err(0, WRONG_NB_OF_ENTRIES);
             }
         }
+        elf_datas->shstrndx = elf_datas->hdr_64->e_shstrndx;
+        if (elf_datas->shstrndx >= SHN_LORESERVE)
+        {
+            if (elf_datas->shstrndx == 0xffff && elf_datas->shdr_64->sh_link >= SHN_LORESERVE)
+            {
+                elf_datas->shstrndx = elf_datas->shdr_64->sh_link;
+            }
+            else
+            {
+                print_err(0, BAD_INDEX_FOR_STRING_TABLE);
+            }
+        }
+        elf_datas->shstrtab_64 = &elf_datas->shdr_64[elf_datas->shstrndx];
+        if (elf_datas->shstrtab_64 == NULL)
+            print_err(0, NO_SHSTRTAB);
+        elf_datas->string_table = (void *)(ptr + elf_datas->shstrtab_64->sh_offset);
+        uint16_t i = -1;
+        unsigned int is_there_symtab = 0;
+        while (++i < elf_datas->nb_of_entries_section_table_64)
+        {
+            Elf64_Shdr *tmp = &elf_datas->shdr_64[i];
+            if (tmp->sh_type == SHT_SYMTAB)
+            {
+                is_there_symtab = 1;
+                elf_datas->shsymtab_64 = &elf_datas->shdr_64[i];
+                break;
+            }
+        }
+        if (is_there_symtab == 0)
+            print_err(0, NO_SYMBOL);
     }
 }
 
-uint32_t convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endianess)
+void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endianess)
 {
     unsigned char *tmp = (unsigned char *)ptr;
 
@@ -138,6 +172,21 @@ uint32_t convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_e
                     print_err(0, WRONG_NB_OF_ENTRIES);
                 }
             }
+            elf_datas->shstrndx = be16toh(elf_datas->hdr_32->e_shstrndx);
+            if (elf_datas->shstrndx >= SHN_LORESERVE)
+            {
+                if (elf_datas->shstrndx == 0xffff && be16toh(elf_datas->shdr_32->sh_link) >= SHN_LORESERVE)
+                {
+                    elf_datas->shstrndx = be16toh(elf_datas->shdr_32->sh_link);
+                }
+                else
+                {
+                    print_err(0, BAD_INDEX_FOR_STRING_TABLE);
+                }
+            }
+            elf_datas->shstrtab_32 = (Elf32_Shdr *)&elf_datas->shdr_32[elf_datas->shstrndx];
+            if (elf_datas->shstrtab_32 == NULL)
+                print_err(0, NO_SYMBOL);
         }
         else if (file_endianess == ELFDATA2LSB)
         {
@@ -158,6 +207,21 @@ uint32_t convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_e
                     print_err(0, WRONG_NB_OF_ENTRIES);
                 }
             }
+            elf_datas->shstrndx = le16toh(elf_datas->hdr_32->e_shstrndx);
+            if (elf_datas->shstrndx >= SHN_LORESERVE)
+            {
+                if (elf_datas->shstrndx == 0xffff && le16toh(elf_datas->shdr_32->sh_link) >= SHN_LORESERVE)
+                {
+                    elf_datas->shstrndx = le16toh(elf_datas->shdr_32->sh_link);
+                }
+                else
+                {
+                    print_err(0, BAD_INDEX_FOR_STRING_TABLE);
+                }
+            }
+            elf_datas->shstrtab_32 = (Elf32_Shdr *)&elf_datas->shdr_32[elf_datas->shstrndx];
+            if (elf_datas->shstrtab_32 == NULL)
+                print_err(0, NO_SYMBOL);
         }
     }
     else
@@ -179,10 +243,27 @@ uint32_t convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_e
                 print_err(0, WRONG_NB_OF_ENTRIES);
             }
         }
+        elf_datas->shstrndx = elf_datas->hdr_32->e_shstrndx;
+        if (elf_datas->shstrndx >= SHN_LORESERVE)
+        {
+            if (elf_datas->shstrndx == 0xffff && elf_datas->shdr_32->sh_link >= SHN_LORESERVE)
+            {
+                elf_datas->shstrndx = elf_datas->shdr_32->sh_link;
+            }
+            else
+            {
+                print_err(0, BAD_INDEX_FOR_STRING_TABLE);
+            }
+        }
+        elf_datas->shstrtab_32 = (Elf32_Shdr *)&elf_datas->shdr_32[elf_datas->shstrndx];
+        if (elf_datas->shstrtab_32 == NULL)
+            print_err(0, NO_SYMBOL);
     }
+    // Elf64_Shdr *stab = &elf_datas->shdr_64[elf_datas->shstrndx];
+    // printf("%d\n", stab->sh_type);
 }
 
-void isValidElfFile(void *ptr, char *prg_name, ELF_datas *elf_datas)
+void is_valid_elf_file(ELF_datas *elf_datas)
 {
     unsigned char *tmp = (unsigned char *)ptr;// on cast en unsigned tant qu'on ne sait si 32 ou 64 bits
 
@@ -204,7 +285,7 @@ void isValidElfFile(void *ptr, char *prg_name, ELF_datas *elf_datas)
                 print_err(0, BAD_HEADER_SIZE);
             else if (elf_datas->type == ET_CORE)// nb : on ne gère pas le type core
                 print_err(0, FILE_FORMAT_NOT_RECOGNIZED);
-            else if ((elf_datas->offset_section_table_64 + (elf_datas->size_of_entry_section_table_64 * elf_datas->nb_of_entries_section_table_64)) != buf.st_size)
+            else if ((elf_datas->offset_section_table_64 + (elf_datas->size_of_entry_section_table_64 * elf_datas->nb_of_entries_section_table_64)) != (unsigned long)buf.st_size)
                 print_err(0, SIZE_OF_THE_FILE_MISMATCH);// offset de la section hdr sect tab + taille de la section hdr tab n'est pas égal à la taille du fichier. 
             break;
         case 32 :
@@ -218,43 +299,4 @@ void isValidElfFile(void *ptr, char *prg_name, ELF_datas *elf_datas)
         default:
             print_err(0, UNKNOWN_ERR);
     }
-}
-/* A FAIRE : 
-e_shstrndx
-              This member holds the section header table index of the
-              entry associated with the section name string table.  If
-              the file has no section name string table, this member
-              holds the value SHN_UNDEF.
-
-              If the index of section name string table section is
-              larger than or equal to SHN_LORESERVE (0xff00), this
-              member holds SHN_XINDEX (0xffff) and the real index of the
-              section name string table section is held in the sh_link
-              member of the initial entry in section header table.
-              Otherwise, the sh_link member of the initial entry in
-              section header table contains the value zero.
-*/
-int main(int ac, char **av)
-{
-    int err;
-    ELF_datas elf_datas;
-
-    memset(&elf_datas, 0, sizeof(elf_datas));
-    if (ac == 1)
-        prg_name = ASSEMBLY_OUTPUT;// a.out
-    else
-        prg_name = av[1];
-    elf_datas.current_machine_endianess = check_current_machine_endianess();/* important pour calculs et checks. https://developer.ibm.com/articles/au-endianc/ */
-    fd = open(prg_name,  O_RDONLY);
-    if (fd == -1)
-        print_err(errno, NULL);
-    if (fstat(fd, &buf) == -1)
-        print_err(errno, NULL);
-    ptr = mmap(0, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (ptr == MAP_FAILED)
-        print_err(errno, NULL);
-    isValidElfFile(ptr, prg_name, &elf_datas);
-    munmap(ptr, buf.st_size);/* on libere l'espace memoire alloue par le kernel */
-    close(fd);
-    exit(EXIT_SUCCESS);
 }
