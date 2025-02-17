@@ -16,8 +16,6 @@ int check_current_machine_endianess()
 
 void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endianess)
 {
-    unsigned char *tmp = (unsigned char *)ptr;
-
     elf_datas->hdr_64 = (Elf64_Ehdr *)ptr;
     elf_datas->proc_bits = 64;
     if (elf_datas->current_machine_endianess != file_endianess)
@@ -29,7 +27,7 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
             elf_datas->size_of_entry_section_table_64 = be16toh(elf_datas->hdr_64->e_shentsize);
             elf_datas->type = be16toh(elf_datas->hdr_64->e_type);
             elf_datas->header_size = be16toh(elf_datas->hdr_64->e_ehsize);
-            elf_datas->shdr_64 = (Elf64_Shdr *)((unsigned char *)tmp + elf_datas->offset_section_table_64);
+            elf_datas->shdr_64 = (Elf64_Shdr *)(ptr + elf_datas->offset_section_table_64);
             if (elf_datas->nb_of_entries_section_table_64 == 0)
             {
                 if (be16toh(elf_datas->shdr_64->sh_size) != 0)
@@ -53,9 +51,26 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
                     print_err(0, BAD_INDEX_FOR_STRING_TABLE);
                 }
             }
-            elf_datas->shstrtab_64 = (Elf64_Shdr *)&elf_datas->shdr_64[elf_datas->shstrndx];
+            elf_datas->shstrtab_64 = &elf_datas->shdr_64[elf_datas->shstrndx];
             if (elf_datas->shstrtab_64 == NULL)
                 print_err(0, NO_SYMBOL);
+            elf_datas->string_table = (ptr + be16toh(elf_datas->shstrtab_64->sh_offset));
+            uint16_t i = 0;
+            unsigned int is_there_shsymtab = 0;
+            while (i < elf_datas->nb_of_entries_section_table_64)
+            {
+                Elf64_Shdr *symtmp = &elf_datas->shdr_64[i];
+                if (symtmp && symtmp->sh_type == SHT_SYMTAB)
+                {
+                    is_there_shsymtab = 1;
+                    elf_datas->shsymtab_64 = &elf_datas->shdr_64[i];
+                    break;
+                }
+                i++;
+            }
+            if (is_there_shsymtab == 0)
+                print_err(0, NO_SYMBOL);
+            elf_datas->symtab_hdr_64 = (Elf64_Sym *)(ptr + be64toh(elf_datas->shsymtab_64->sh_offset));
         }
         else if (file_endianess == ELFDATA2LSB)
         {
@@ -64,7 +79,7 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
             elf_datas->size_of_entry_section_table_64 = le16toh(elf_datas->hdr_64->e_shentsize);
             elf_datas->type = le16toh(elf_datas->hdr_64->e_type);
             elf_datas->header_size = le16toh(elf_datas->hdr_64->e_ehsize);
-            elf_datas->shdr_64 = (Elf64_Shdr *)((unsigned char *)tmp + elf_datas->offset_section_table_64);
+            elf_datas->shdr_64 = (Elf64_Shdr *)(ptr + elf_datas->offset_section_table_64);
             if (elf_datas->nb_of_entries_section_table_64 == 0)// check si nb entry > SHN_LORESERVE (0xff00)
             {
                 if (le16toh(elf_datas->shdr_64->sh_size) != 0)
@@ -88,9 +103,26 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
                     print_err(0, BAD_INDEX_FOR_STRING_TABLE);
                 }
             }
-            elf_datas->shstrtab_64 = (Elf64_Shdr *)&elf_datas->shdr_64[elf_datas->shstrndx];
+            elf_datas->shstrtab_64 = &elf_datas->shdr_64[elf_datas->shstrndx];
             if (elf_datas->shstrtab_64 == NULL)
                 print_err(0, NO_SYMBOL);
+            elf_datas->string_table = (ptr + le16toh(elf_datas->shstrtab_64->sh_offset));
+            uint16_t i = 0;
+            unsigned int is_there_shsymtab = 0;
+            while (i < elf_datas->nb_of_entries_section_table_64)
+            {
+                Elf64_Shdr *symtmp = &elf_datas->shdr_64[i];
+                if (symtmp && symtmp->sh_type == SHT_SYMTAB)
+                {
+                    is_there_shsymtab = 1;
+                    elf_datas->shsymtab_64 = &elf_datas->shdr_64[i];
+                    break;
+                }
+                i++;
+            }
+            if (is_there_shsymtab == 0)
+                print_err(0, NO_SYMBOL);
+            elf_datas->symtab_hdr_64 = (Elf64_Sym *)(ptr + le64toh(elf_datas->shsymtab_64->sh_offset));
         }
     }
     else
@@ -100,7 +132,7 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
         elf_datas->size_of_entry_section_table_64 = elf_datas->hdr_64->e_shentsize;
         elf_datas->type = elf_datas->hdr_64->e_type;
         elf_datas->header_size = elf_datas->hdr_64->e_ehsize;
-        elf_datas->shdr_64 = (Elf64_Shdr *)((unsigned char *)tmp + elf_datas->offset_section_table_64);
+        elf_datas->shdr_64 = (Elf64_Shdr *)(ptr + elf_datas->offset_section_table_64);
         if (elf_datas->nb_of_entries_section_table_64 == 0)// check si nb entry > SHN_LORESERVE (0xff00)
         {
             if (elf_datas->shdr_64->sh_size != 0)
@@ -127,28 +159,42 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
         elf_datas->shstrtab_64 = &elf_datas->shdr_64[elf_datas->shstrndx];
         if (elf_datas->shstrtab_64 == NULL)
             print_err(0, NO_SHSTRTAB);
-        elf_datas->string_table = (void *)(ptr + elf_datas->shstrtab_64->sh_offset);
-        uint16_t i = -1;
-        unsigned int is_there_symtab = 0;
-        while (++i < elf_datas->nb_of_entries_section_table_64)
+        elf_datas->string_table = (ptr + elf_datas->shstrtab_64->sh_offset);
+        uint16_t i = 0;
+        unsigned int is_there_shsymtab = 0;
+        while (i < elf_datas->nb_of_entries_section_table_64)
         {
-            Elf64_Shdr *tmp = &elf_datas->shdr_64[i];
-            if (tmp->sh_type == SHT_SYMTAB)
+            Elf64_Shdr *symtmp = &elf_datas->shdr_64[i];
+            if (symtmp->sh_type == SHT_SYMTAB)
             {
-                is_there_symtab = 1;
+                is_there_shsymtab = 1;
                 elf_datas->shsymtab_64 = &elf_datas->shdr_64[i];
                 break;
             }
+            i++;
         }
-        if (is_there_symtab == 0)
+        if (is_there_shsymtab == 0)
             print_err(0, NO_SYMBOL);
+        elf_datas->symtab_hdr_64 = (Elf64_Sym *)(ptr + elf_datas->shsymtab_64->sh_offset);
+        if (elf_datas->shsymtab_64->sh_entsize)
+            elf_datas->nb_of_symbols_64 = elf_datas->shsymtab_64->sh_size / elf_datas->shsymtab_64->sh_entsize;
+        uint64_t idx = 0;
+        while (idx < elf_datas->nb_of_symbols_64)
+        {
+            // Elf64_Sym *tmp = elf_datas->symtab_hdr_64;
+        //     if (tmp && tmp->st_name != 0)
+        //     {
+        //         elf_datas->symtab_entry_hdr = malloc(sizeof(Symtab_entry));
+        //         elf_datas->symtab_entry_hdr->next = NULL;
+        //         elf_datas->symtab_entry_hdr->sym_rdx = 0;
+        //         elf_datas->symtab_entry_hdr->sym_type = 0;
+        //     }
+        }
     }
 }
 
 void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endianess)
 {
-    unsigned char *tmp = (unsigned char *)ptr;
-
     elf_datas->hdr_32 = (Elf32_Ehdr *)ptr;
     elf_datas->proc_bits = 32;
     if (elf_datas->current_machine_endianess != file_endianess)
@@ -160,7 +206,7 @@ void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endia
             elf_datas->size_of_entry_section_table_32 = be16toh(elf_datas->hdr_32->e_shentsize);
             elf_datas->type = be16toh(elf_datas->hdr_32->e_type);
             elf_datas->header_size = be16toh(elf_datas->hdr_32->e_ehsize);
-            elf_datas->shdr_32 = (Elf32_Shdr *)((unsigned char *)tmp + elf_datas->offset_section_table_32);
+            elf_datas->shdr_32 = (Elf32_Shdr *)(ptr + elf_datas->offset_section_table_32);
             if (elf_datas->nb_of_entries_section_table_32 == 0)// check si nb entry > SHN_LORESERVE (0xff00)
             {
                 if (be16toh(elf_datas->shdr_32->sh_size) != 0)
@@ -187,6 +233,23 @@ void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endia
             elf_datas->shstrtab_32 = (Elf32_Shdr *)&elf_datas->shdr_32[elf_datas->shstrndx];
             if (elf_datas->shstrtab_32 == NULL)
                 print_err(0, NO_SYMBOL);
+            elf_datas->string_table = (ptr + be16toh(elf_datas->shstrtab_32->sh_offset));
+            uint16_t i = 0;
+            unsigned int is_there_shsymtab = 0;
+            while (i < elf_datas->nb_of_entries_section_table_32)
+            {
+                Elf32_Shdr *symtmp = &elf_datas->shdr_32[i];
+                if (symtmp && symtmp->sh_type == SHT_SYMTAB)
+                {
+                    is_there_shsymtab = 1;
+                    elf_datas->shsymtab_32 = &elf_datas->shdr_32[i];
+                    break;
+                }
+                i++;
+            }
+            if (is_there_shsymtab == 0)
+                print_err(0, NO_SYMBOL);
+            elf_datas->symtab_hdr_32 = (Elf32_Sym *)(ptr + be16toh(elf_datas->shsymtab_32->sh_offset));
         }
         else if (file_endianess == ELFDATA2LSB)
         {
@@ -195,7 +258,7 @@ void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endia
             elf_datas->size_of_entry_section_table_32 = le16toh(elf_datas->hdr_32->e_shentsize);
             elf_datas->type = le16toh(elf_datas->hdr_32->e_type);
             elf_datas->header_size = le16toh(elf_datas->hdr_32->e_ehsize);
-            elf_datas->shdr_32 = (Elf32_Shdr *)((unsigned char *)tmp + elf_datas->offset_section_table_32);
+            elf_datas->shdr_32 = (Elf32_Shdr *)(ptr + elf_datas->offset_section_table_32);
             if (elf_datas->nb_of_entries_section_table_32 == 0)// check si nb entry > SHN_LORESERVE (0xff00)
             {
                 if (le16toh(elf_datas->shdr_32->sh_size) != 0)
@@ -219,9 +282,26 @@ void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endia
                     print_err(0, BAD_INDEX_FOR_STRING_TABLE);
                 }
             }
-            elf_datas->shstrtab_32 = (Elf32_Shdr *)&elf_datas->shdr_32[elf_datas->shstrndx];
+            elf_datas->shstrtab_32 = &elf_datas->shdr_32[elf_datas->shstrndx];
             if (elf_datas->shstrtab_32 == NULL)
                 print_err(0, NO_SYMBOL);
+            elf_datas->string_table = (ptr + le16toh(elf_datas->shstrtab_32->sh_offset));
+            uint16_t i = 0;
+            unsigned int is_there_shsymtab = 0;
+            while (i < elf_datas->nb_of_entries_section_table_32)
+            {
+                Elf32_Shdr *symtmp = &elf_datas->shdr_32[i];
+                if (symtmp && symtmp->sh_type == SHT_SYMTAB)
+                {
+                    is_there_shsymtab = 1;
+                    elf_datas->shsymtab_32 = &elf_datas->shdr_32[i];
+                    break;
+                }
+                i++;
+            }
+            if (is_there_shsymtab == 0)
+                print_err(0, NO_SYMBOL);
+            elf_datas->symtab_hdr_32 = (Elf32_Sym *)(ptr + le16toh(elf_datas->shsymtab_32->sh_offset));
         }
     }
     else
@@ -231,7 +311,7 @@ void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endia
         elf_datas->size_of_entry_section_table_32 = elf_datas->hdr_32->e_shentsize;
         elf_datas->type = elf_datas->type;
         elf_datas->header_size = elf_datas->hdr_32->e_ehsize;
-        elf_datas->shdr_32 = (Elf32_Shdr *)((unsigned char *)tmp + elf_datas->offset_section_table_32);
+        elf_datas->shdr_32 = (Elf32_Shdr *)(ptr + elf_datas->offset_section_table_32);
         if (elf_datas->nb_of_entries_section_table_32 == 0)// check si nb entry > SHN_LORESERVE (0xff00)
         {
             if (elf_datas->shdr_32->sh_size != 0)
@@ -255,12 +335,27 @@ void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endia
                 print_err(0, BAD_INDEX_FOR_STRING_TABLE);
             }
         }
-        elf_datas->shstrtab_32 = (Elf32_Shdr *)&elf_datas->shdr_32[elf_datas->shstrndx];
+        elf_datas->shstrtab_32 = &elf_datas->shdr_32[elf_datas->shstrndx];
         if (elf_datas->shstrtab_32 == NULL)
             print_err(0, NO_SYMBOL);
+        elf_datas->string_table = (ptr + elf_datas->shstrtab_32->sh_offset);
+        uint16_t i = 0;
+        unsigned int is_there_shsymtab = 0;
+        while (i < elf_datas->nb_of_entries_section_table_32)
+        {
+            Elf32_Shdr *symtmp = &elf_datas->shdr_32[i];
+            if (symtmp && symtmp->sh_type == SHT_SYMTAB)
+            {
+                is_there_shsymtab = 1;
+                elf_datas->shsymtab_32 = &elf_datas->shdr_32[i];
+                break;
+            }
+            i++;
+        }
+        if (is_there_shsymtab == 0)
+            print_err(0, NO_SYMBOL);
+        elf_datas->symtab_hdr_32 = (Elf32_Sym *)(ptr + elf_datas->shsymtab_32->sh_offset);
     }
-    // Elf64_Shdr *stab = &elf_datas->shdr_64[elf_datas->shstrndx];
-    // printf("%d\n", stab->sh_type);
 }
 
 void is_valid_elf_file(ELF_datas *elf_datas)

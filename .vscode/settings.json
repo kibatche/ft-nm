@@ -70,5 +70,6 @@
     "ft_nm.h": "c",
     "byteswap.h": "c",
     "mman.h": "c"
-  }
+  },
+  "C_Cpp.errorSquiggles": "disabled"
 }

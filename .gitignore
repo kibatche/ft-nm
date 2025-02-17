@@ -53,3 +53,11 @@ dkms.conf
 
 # gdb files
 peda-session*
+ft_nm_debug
+
+#docs
+Doc/elf(5) - Linux manual page.html
+Doc/elf(5) - Linux manual page_fichiers/google-analytics_ga.js
+Doc/elf(5) - Linux manual page_fichiers/style_002.css
+Doc/elf(5) - Linux manual page_fichiers/style.css
+Doc/elf(5) - Linux manual page_fichiers/TLPI-front-cover-vsmall.png

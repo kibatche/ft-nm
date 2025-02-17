@@ -1,0 +1,1 @@
+void *yolo() {write(1, "test",4);}

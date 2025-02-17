@@ -17,11 +17,15 @@ typedef struct ELF_datas
     Elf64_Ehdr  *hdr_64;/*elf header pour les elf 64 bits */
     Elf64_Shdr  *shdr_64;/*section header pour les elf 64 bits */
     Elf64_Shdr  *shstrtab_64;
-    Elf64_Shdr   *shsymtab_64;
+    Elf64_Shdr  *shsymtab_64;
+    Elf64_Sym   *symtab_hdr_64;
+    uint64_t    nb_of_symbols_64;
     Elf32_Ehdr  *hdr_32;/*elf header pour les elf 32 bits */
     Elf32_Shdr  *shdr_32;/*elf header pour les elf 32 bits */
     Elf32_Shdr  *shstrtab_32;
-    Elf32_Shdr   *shsymtab_32;
+    Elf32_Shdr  *shsymtab_32;
+    Elf32_Sym   *symtab_hdr_32;
+    uint32_t    nb_of_symbols_32;
     void        *string_table;
     int         proc_bits;/*64 ou 32 bits*/
     int         current_machine_endianess;
@@ -34,11 +38,20 @@ typedef struct ELF_datas
     uint64_t    offset_section_table_64;
     uint16_t    nb_of_entries_section_table_64;
     uint32_t    size_of_entry_section_table_64;
+    struct Symtab_entry    *symtab_entry_hdr;
 } ELF_datas;
 
+typedef struct Symtab_entry
+{
+    uint32_t            sym_rdx;
+    char                sym_type;
+    char                *sym_name;
+    struct Symtab_entry       *next;
+}   Symtab_entry;
+
 void    is_valid_elf_file(ELF_datas *elf_datas);
-void    convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endianess);
 void    convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endianess);
+void    convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endianess);
 void    print_err(int e, char *err_string);
 int     check_current_machine_endianess();
 
