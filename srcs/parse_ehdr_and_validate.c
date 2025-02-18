@@ -14,7 +14,7 @@ int check_current_machine_endianess()
         return B_ENDIAN;
 }
 
-void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endianess)
+void convert_and_fill_to_right_endianess_64(ELF_datas_64 *elf_datas, int file_endianess)
 {
     elf_datas->hdr_64 = (Elf64_Ehdr *)ptr;
     elf_datas->proc_bits = 64;
@@ -71,6 +71,10 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
             if (is_there_shsymtab == 0)
                 print_err(0, NO_SYMBOL);
             elf_datas->symtab_hdr_64 = (Elf64_Sym *)(ptr + be64toh(elf_datas->shsymtab_64->sh_offset));
+            if (elf_datas->shsymtab_64->sh_entsize)
+                elf_datas->nb_of_symbols_64 = be64toh(elf_datas->shsymtab_64->sh_size) / be64toh(elf_datas->shsymtab_64->sh_entsize);
+            else
+                print_err(0, NO_SYMBOL);
         }
         else if (file_endianess == ELFDATA2LSB)
         {
@@ -123,6 +127,10 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
             if (is_there_shsymtab == 0)
                 print_err(0, NO_SYMBOL);
             elf_datas->symtab_hdr_64 = (Elf64_Sym *)(ptr + le64toh(elf_datas->shsymtab_64->sh_offset));
+            if (elf_datas->shsymtab_64->sh_entsize)
+                elf_datas->nb_of_symbols_64 = le64toh(elf_datas->shsymtab_64->sh_size) / le64toh(elf_datas->shsymtab_64->sh_entsize);
+            else
+                print_err(0, NO_SYMBOL);
         }
     }
     else
@@ -178,22 +186,12 @@ void convert_and_fill_to_right_endianess_64(ELF_datas *elf_datas, int file_endia
         elf_datas->symtab_hdr_64 = (Elf64_Sym *)(ptr + elf_datas->shsymtab_64->sh_offset);
         if (elf_datas->shsymtab_64->sh_entsize)
             elf_datas->nb_of_symbols_64 = elf_datas->shsymtab_64->sh_size / elf_datas->shsymtab_64->sh_entsize;
-        uint64_t idx = 0;
-        while (idx < elf_datas->nb_of_symbols_64)
-        {
-            // Elf64_Sym *tmp = elf_datas->symtab_hdr_64;
-        //     if (tmp && tmp->st_name != 0)
-        //     {
-        //         elf_datas->symtab_entry_hdr = malloc(sizeof(Symtab_entry));
-        //         elf_datas->symtab_entry_hdr->next = NULL;
-        //         elf_datas->symtab_entry_hdr->sym_rdx = 0;
-        //         elf_datas->symtab_entry_hdr->sym_type = 0;
-        //     }
-        }
+        else
+            print_err(0, NO_SYMBOL);
     }
 }
 
-void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endianess)
+void convert_and_fill_to_right_endianess_32(ELF_datas_32 *elf_datas, int file_endianess)
 {
     elf_datas->hdr_32 = (Elf32_Ehdr *)ptr;
     elf_datas->proc_bits = 32;
@@ -250,6 +248,10 @@ void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endia
             if (is_there_shsymtab == 0)
                 print_err(0, NO_SYMBOL);
             elf_datas->symtab_hdr_32 = (Elf32_Sym *)(ptr + be16toh(elf_datas->shsymtab_32->sh_offset));
+            if (elf_datas->shsymtab_32->sh_entsize)
+                elf_datas->nb_of_symbols_32 = be32toh(elf_datas->shsymtab_32->sh_size) / be32toh(elf_datas->shsymtab_32->sh_entsize);
+            else
+                print_err(0, NO_SYMBOL);
         }
         else if (file_endianess == ELFDATA2LSB)
         {
@@ -302,6 +304,10 @@ void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endia
             if (is_there_shsymtab == 0)
                 print_err(0, NO_SYMBOL);
             elf_datas->symtab_hdr_32 = (Elf32_Sym *)(ptr + le16toh(elf_datas->shsymtab_32->sh_offset));
+            if (elf_datas->shsymtab_32->sh_entsize)
+                elf_datas->nb_of_symbols_32 = le32toh(elf_datas->shsymtab_32->sh_size) / le32toh(elf_datas->shsymtab_32->sh_entsize);
+            else
+                print_err(0, NO_SYMBOL);
         }
     }
     else
@@ -355,10 +361,14 @@ void convert_and_fill_to_right_endianess_32(ELF_datas *elf_datas, int file_endia
         if (is_there_shsymtab == 0)
             print_err(0, NO_SYMBOL);
         elf_datas->symtab_hdr_32 = (Elf32_Sym *)(ptr + elf_datas->shsymtab_32->sh_offset);
+        if (elf_datas->shsymtab_32->sh_entsize)
+            elf_datas->nb_of_symbols_32 = elf_datas->shsymtab_32->sh_size / elf_datas->shsymtab_32->sh_entsize;
+        else
+            print_err(0, NO_SYMBOL);
     }
 }
 
-void is_valid_elf_file(ELF_datas *elf_datas)
+int is_valid_elf_file(ELF_datas_64 *elf_datas_64, ELF_datas_32 *elf_datas_32)
 {
     unsigned char *tmp = (unsigned char *)ptr;// on cast en unsigned tant qu'on ne sait si 32 ou 64 bits
 
@@ -369,29 +379,32 @@ void is_valid_elf_file(ELF_datas *elf_datas)
     else if (tmp[EI_DATA] != ELFDATA2LSB \
         && tmp[EI_DATA] != ELFDATA2MSB)// ni LSB ni MSB
         print_err(0, FILE_FORMAT_NOT_RECOGNIZED);
-    if (tmp[EI_CLASS] == ELFCLASS64)// cast dans la bonne struct
-        convert_and_fill_to_right_endianess_64(elf_datas, tmp[EI_DATA]);
-    else
-        convert_and_fill_to_right_endianess_32(elf_datas, tmp[EI_DATA]);
-    switch (elf_datas->proc_bits)
+    switch (tmp[EI_CLASS])
     {
-        case 64:
-            if (elf_datas->header_size != 0x40)
+        case ELFCLASS64:
+            convert_and_fill_to_right_endianess_64(elf_datas_64, tmp[EI_DATA]);
+            elf_datas_32 = NULL;
+            if (elf_datas_64->header_size != 0x40)
                 print_err(0, BAD_HEADER_SIZE);
-            else if (elf_datas->type == ET_CORE)// nb : on ne gère pas le type core
+            else if (elf_datas_64->type == ET_CORE)// nb : on ne gère pas le type core
                 print_err(0, FILE_FORMAT_NOT_RECOGNIZED);
-            else if ((elf_datas->offset_section_table_64 + (elf_datas->size_of_entry_section_table_64 * elf_datas->nb_of_entries_section_table_64)) != (unsigned long)buf.st_size)
+            else if ((elf_datas_64->offset_section_table_64 + (elf_datas_64->size_of_entry_section_table_64 * elf_datas_64->nb_of_entries_section_table_64)) != (unsigned long)buf.st_size)
                 print_err(0, SIZE_OF_THE_FILE_MISMATCH);// offset de la section hdr sect tab + taille de la section hdr tab n'est pas égal à la taille du fichier. 
+            return 64;
             break;
-        case 32 :
-            if (elf_datas->header_size != 0x34)
+        case ELFCLASS32:
+            convert_and_fill_to_right_endianess_32(elf_datas_32, tmp[EI_DATA]);
+            elf_datas_64 = NULL;
+            if (elf_datas_32->header_size != 0x34)
                 print_err(0, BAD_HEADER_SIZE);
-            if (elf_datas->type == ET_CORE)
+            if (elf_datas_32->type == ET_CORE)
                 print_err(0, FILE_FORMAT_NOT_RECOGNIZED);
-            else if ((elf_datas->offset_section_table_32 + (elf_datas->size_of_entry_section_table_32 * elf_datas->nb_of_entries_section_table_32)) != buf.st_size)
+            else if ((elf_datas_32->offset_section_table_32 + (elf_datas_32->size_of_entry_section_table_32 * elf_datas_32->nb_of_entries_section_table_32)) != buf.st_size)
                 print_err(0, SIZE_OF_THE_FILE_MISMATCH);
-            break;
+            return 32;
         default:
-            print_err(0, UNKNOWN_ERR);
+            print_err(0, NO_SYMBOL);
+            return -1;
+            break;
     }
 }
