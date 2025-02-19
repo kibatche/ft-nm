@@ -3,6 +3,7 @@
 
 # define REEF(x){if (x){free(x);x = NULL;}}
 # define ERROR -1
+# define SUCCESS 0
 # define L_ENDIAN 1
 # define B_ENDIAN 2
 # define ASSEMBLY_OUTPUT "a.out"

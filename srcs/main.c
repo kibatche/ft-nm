@@ -11,8 +11,8 @@ int main(int ac, char **av)
 {
     ELF_datas_64 elf_datas_64;
     ELF_datas_32 elf_datas_32;
-    Symbol_list symbol_list;
     int nb_of_args = 0;
+
     while (++nb_of_args < ac)
     {
         prg_name = (ac == 1 ? ASSEMBLY_OUTPUT:av[nb_of_args]);
@@ -28,13 +28,17 @@ int main(int ac, char **av)
         ptr = mmap(0, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
         if (ptr == MAP_FAILED)
             print_err(errno, NULL);
-        int proc_bits = is_valid_elf_file(&elf_datas_64, &elf_datas_32);
-        if (proc_bits == 64)
-            printf("64\n");
+        int ret = is_valid_elf_file(&elf_datas_64, &elf_datas_32);
+        if (ret == ERROR)
+            goto FREE_AND_CLOSE;
+        else if (ret == 64)
+            parse_symbols_64(&elf_datas_64);
         else
             printf("32\n");
-        // FREE_AND_CLOSE:
+    FREE_AND_CLOSE:
         munmap(ptr, buf.st_size);/* on libere l'espace memoire alloue par le kernel */
+        ft_clear_lst(elf_datas_32.symbol_list);
+        ft_clear_lst(elf_datas_64.symbol_list);
         close(fd);
     }
     exit(EXIT_SUCCESS);
