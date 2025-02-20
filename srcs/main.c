@@ -2,7 +2,6 @@
 
 char *prg_name;
 struct stat buf;
-int fd;
 void *ptr;
 
 /* A FAIRE : REMPLACER TOUTES LES FONCTIONS DE LA GLIBC AVEC CELLES DE LA LIBFT */
@@ -12,10 +11,16 @@ int main(int ac, char **av)
     ELF_datas_64 elf_datas_64;
     ELF_datas_32 elf_datas_32;
     int nb_of_args = 0;
+    int fd;
 
     while (++nb_of_args < ac)
     {
         prg_name = (ac == 1 ? ASSEMBLY_OUTPUT:av[nb_of_args]);
+        if (ac > 1)
+        {
+            write(1, av[nb_of_args], ft_strlen(av[nb_of_args]));
+            write(1, ":\n", 2);
+        }
         memset(&elf_datas_64, 0, sizeof(elf_datas_64));
         memset(&elf_datas_32, 0, sizeof(elf_datas_32));
         elf_datas_64.current_machine_endianess = check_current_machine_endianess();/* important pour calculs et checks. https://developer.ibm.com/articles/au-endianc/ */

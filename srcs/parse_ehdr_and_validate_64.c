@@ -167,6 +167,7 @@ int fill_64(ELF_datas_64 *elf_datas)
     elf_datas->shstrndx = elf_datas->hdr_64->e_shstrndx;
     if (elf_datas->shstrndx >= SHN_LORESERVE)
     {
+        /* localisation de la string table si pas de place dans la table des sections*/
         if (elf_datas->shstrndx == 0xffff && elf_datas->shdr_64->sh_link >= SHN_LORESERVE)
         {
             elf_datas->shstrndx = elf_datas->shdr_64->sh_link;
@@ -184,7 +185,7 @@ int fill_64(ELF_datas_64 *elf_datas)
     {
         Elf64_Shdr *strtab_tmp = &elf_datas->shdr_64[i];
         if (strtab_tmp->sh_type == SHT_STRTAB)
-        {/*Détermine si la section de type SHT_SYMTAB est bien celle des noms de la table des symboles*/
+        {/*Détermine si la section de type SHT_STRTAB est bien celle des noms de la table des symboles*/
             if (!ft_strcmp(".strtab", (const char *)&elf_datas->section_strtab_64[strtab_tmp->sh_name]))
             {
                 elf_datas->string_table = (ptr + elf_datas->shdr_64[i].sh_offset);

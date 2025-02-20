@@ -35,15 +35,65 @@ char *parse_symbol_address_64(Elf64_Sym *symbol_to_parse)
     return addr;
 }
 
-char parse_symbol_letter_64(Elf64_Sym *symbol_to_parse)
+/*Fonction principale de ft_nm qui détermine la représentation du symbole analysé en fonction de diverses infos.*/
+char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
 {
-    (void)symbol_to_parse;
-    return 0;
+    if (symbol_to_parse == NULL || get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx) == NULL)
+        return UNKNOWN;// '?' => ne devrait jamais arriver dans ces conditons avec nm sans options.
+    else if (get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHN_ABS)
+        return ABSOLUTE;//'A'
+    if (strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), '.bss'))
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
+            return BSS_GLOB;// 'B'
+        return BSS_LOC;// 'b'
+    }
+    if (strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), '.data'))
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
+            return DATA_GLOB;// 'D'
+        else
+            return DATA_LOC;// 'd'
+    }
+    if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL \
+        && ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_OBJECT \
+        && get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHN_COMMON)
+        return COMMON_GLOB;// 'C', 'c' ne peut pas exister de nos jours car les sections.scommon sont automatiquement ajoutées à .sbss
+    else if (get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHT_NULL)
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_WEAK)
+        {
+            if (ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_NOTYPE)
+                return WEAK_NOTYPE_SHTNULL;// 'w'
+            else
+                return WEAK_OBJ_SHTNULL;// 'v'
+        }
+        else
+        {
+            return UNDEFINED;// 'U' ex : __libc_start_main qui a un lien STB_GLOBAL
+        }
+    }
+    else if (ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_GNU_IFUNC)
+    {
+        return INDIRECT_FUN;// 'i'
+    }
+    else if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_WEAK)
+    {
+        if (ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_OBJECT)
+            return WEAK_OBJ;// 'V'
+        else
+            return WEAK_NOTYPE;// 'W' => ne peut que être ça car 'v' et 'w' ont une précédence dans le traitement (on a le cas particulier de U dedans)
+    }
+    else if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GNU_UNIQUE)
+    {
+        return UNIQUE;// 'u'
+    }
+    return UNKNOWN;// '?'
 }
 
 int parse_symbols_64(ELF_datas_64 *elf_datas)
 {
-    int i = 0;
+    int i = 0;// pas -1 car on sait que la première section est à passer. cf proch. boucle while
     int res;
 
     elf_datas->symbol_list = malloc(sizeof(Sym_list));
@@ -51,12 +101,15 @@ int parse_symbols_64(ELF_datas_64 *elf_datas)
         return ERROR;
     elf_datas->symbol_list->last_sym = NULL;
     elf_datas->symbol_list->first_sym = NULL;
+    /*nécessaire pour ret. une erreur descriptive plutôt que de faire un simple check dans la boucle while.*/
+    if (elf_datas->symtab_hdr_64[i + 1] == NULL)
+        return print_err(0, NO_SYMBOL);
     while (++i < (int)elf_datas->nb_of_symbols_64)
     {// les types section et file ne sont pas dans nm basique (sans le -a)
         if (ELF64_ST_TYPE(elf_datas->symtab_hdr_64[i].st_info) == STT_SECTION \
             || ELF64_ST_TYPE(elf_datas->symtab_hdr_64[i].st_info) == STT_FILE)
             continue;
-        res = new_symbol_pushback(elf_datas->symbol_list);
+        res = new_symbol_pushback(elf_datas->symbol_list);//  ajout d'un noeud dans la liste
         if (res == ERROR)
             return ERROR;
         elf_datas->symbol_list->last_sym->addr = parse_symbol_address_64(&elf_datas->symtab_hdr_64[i]);

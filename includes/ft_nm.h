@@ -14,11 +14,11 @@
 
 typedef struct Symbol
 {
-    char                *addr;
-    char                letter;
-    char                *name;
-    struct Symbol *next;
-    struct Symbol *prev; 
+    char            *addr;
+    char            letter;
+    char            *name;
+    struct Symbol   *next;
+    struct Symbol   *prev; 
 }   Symbol;
 
 typedef struct Sym_list
@@ -71,14 +71,19 @@ typedef struct ELF_datas_32
 int     is_valid_elf_file(ELF_datas_64 *elf_datas_64, ELF_datas_32 *elf_datas_32);
 int     check_current_machine_endianess();
 
-/*fonctions 64 bits*/
+/*fonctions 64 bits : Parsing basique*/
 int     convert_and_fill_to_right_endianess_64(ELF_datas_64 *elf_datas, int file_endianess);
 int     fill_64(ELF_datas_64 *elf_datas);
 int     convert_and_fill_to_LSB_64(ELF_datas_64 *elf_datas);
 int     convert_and_fill_to_MSB_64(ELF_datas_64 *elf_datas);
-char    *parse_symbol_address_64(Elf64_Sym *symbol_to_parse);
-char    parse_symbol_letter_64(Elf64_Sym *symbol_to_parse);
-int     parse_symbols_64(ELF_datas_64 *elf_datas);
+
+/*fonctions 64 bits : Parsing des symboles*/
+char        *parse_symbol_address_64(Elf64_Sym *symbol_to_parse);
+char        parse_symbol_letter_64(Elf64_Sym *symbol_to_parse);
+int         parse_symbols_64(ELF_datas_64 *elf_datas);
+Elf64_Shdr  *get_section_by_name_64(ELF_datas_64 *elf_datas, const char *name);
+Elf64_Shdr  *get_section_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx);
+char        *get_section_name_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx)
 
 /*fonctions 32 bits*/
 int     convert_and_fill_to_right_endianess_32(ELF_datas_32 *elf_datas, int file_endianess);

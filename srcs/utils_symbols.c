@@ -41,3 +41,52 @@ void	ft_clear_lst(Sym_list *symbol_lst)
 	symbol_lst->last_sym = NULL;
     REEF(symbol_lst);
 }
+
+Elf64_Shdr *get_section_by_name_64(ELF_datas_64 *elf_datas, const char *name)
+{
+	unsigned int i = 0;
+
+	while (name && i < elf_datas->nb_of_entries_section_table_64)
+    {
+        Elf64_Shdr *to_return = &elf_datas->shdr_64[i];
+		if (!ft_strcmp(name, (const char *)&elf_datas->section_strtab_64[to_return->sh_name]))
+			return to_return;
+        i++;
+    }
+	return NULL;
+}
+
+Elf64_Shdr *get_section_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx)
+{
+	if (idx > elf_datas->nb_of_entries_section_table_64)
+		return NULL;
+	return &elf_datas->shdr_64[idx];
+}
+
+char *get_section_name_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx)
+{
+	if (idx < elf_datas->nb_of_entries_section_table_64)
+		Elf64_Shdr *to_return = &elf_datas->shdr_64[idx];
+	else
+		return NULL;
+	return &elf_datas->section_strtab_64[to_return->sh_name];
+}
+
+Elf32_Shdr *get_section_by_name_32(ELF_datas_32 *elf_datas, const char *name)
+{
+	unsigned int i = 0;
+
+	while (i < elf_datas->nb_of_entries_section_table_32)
+    {
+        Elf32_Shdr *to_return = &elf_datas->shdr_32[i];
+		if (!ft_strcmp(name, (const char *)&elf_datas->section_strtab_32[to_return->sh_name]))
+			return to_return;
+        i++;
+    }
+}
+
+char *get_name_by_idx_32(ELF_datas_32 *elf_datas, unsigned int idx)
+{
+	Elf32_Shdr *to_return = &elf_datas->shdr_32[idx];
+	return &elf_datas->section_strtab_32[to_return->sh_name];
+}
