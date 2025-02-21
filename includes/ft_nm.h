@@ -79,11 +79,11 @@ int     convert_and_fill_to_MSB_64(ELF_datas_64 *elf_datas);
 
 /*fonctions 64 bits : Parsing des symboles*/
 char        *parse_symbol_address_64(Elf64_Sym *symbol_to_parse);
-char        parse_symbol_letter_64(Elf64_Sym *symbol_to_parse);
+char        parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse);
 int         parse_symbols_64(ELF_datas_64 *elf_datas);
 Elf64_Shdr  *get_section_by_name_64(ELF_datas_64 *elf_datas, const char *name);
 Elf64_Shdr  *get_section_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx);
-char        *get_section_name_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx)
+char        *get_section_name_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx);
 
 /*fonctions 32 bits*/
 int     convert_and_fill_to_right_endianess_32(ELF_datas_32 *elf_datas, int file_endianess);

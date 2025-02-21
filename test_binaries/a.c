@@ -1,3 +1,6 @@
-void *yolo() {write(1, "test",4);}
-const int RODATA_GLOB_CANARY; // R .rodata
-static int __attribute__((common)) COMON_VAR_LOC_CANARY;
+#include "a.h"
+#include <stdio.h>
+
+void print_hello() { printf("Hello, geeksforgeeks!\n"); }
+
+int add(int a, int b) { return a + b; }

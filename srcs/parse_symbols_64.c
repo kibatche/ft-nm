@@ -1,0 +1,173 @@
+#include "ft_nm.h"
+
+char *parse_symbol_address_64(Elf64_Sym *symbol_to_parse)
+{
+    if (symbol_to_parse->st_value == 0 && symbol_to_parse->st_size == 0)
+        return ft_strdup("                ");
+    char *tmp = ft_itoa_base(symbol_to_parse->st_value, 16);
+    int len_addr = ft_strlen(tmp);
+    int start_idx;
+    int i = 0;
+
+    if (len_addr > 16) // l"adresse fait plus de 16 caractères => erreur
+    {
+        REEF(tmp);
+        return NULL;
+    }
+    char *addr = malloc(sizeof(char) * 17);
+    if (addr == NULL)
+    {
+        REEF(tmp);
+        return NULL;
+    }
+    start_idx = 16 - len_addr;
+    ft_memset(addr, '0', 16);
+    addr[16] = 0;
+    while ((start_idx + i) < 16)
+    {
+        if (tmp[i] >= 'A' && tmp[i] <= 'Z')// on met en minuscule car nm met les adresses en minuscule
+            addr[start_idx + i] = tmp[i] + 32;
+        else
+            addr[start_idx + i] = tmp[i];
+        i++;
+    }
+    REEF(tmp);
+    return addr;
+}
+
+
+/*Fonction principale de ft_nm qui détermine la représentation du symbole analysé en fonction de diverses infos.*/
+char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
+{
+    if (symbol_to_parse == NULL || elf_datas->shdr_64 == NULL \
+        || get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx) == NULL)
+        return UNKNOWN;// "?" => ne devrait jamais arriver dans ces conditons avec nm sans options.
+    else if (get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHN_ABS)
+        return ABSOLUTE;//"A"
+    if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL \
+    && ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_OBJECT \
+    && get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHN_COMMON)
+        return COMMON_GLOB;// "C", "c" ne peut pas exister de nos jours car les sections.scommon sont automatiquement ajoutées à .sbss
+    if (get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHT_NULL)
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_WEAK)
+        {
+            if (ELF64_ST_TYPE(symbol_to_parse->st_info) != STT_OBJECT)
+                return WEAK_NOTYPE_SHTNULL;// "w"
+            else
+                return WEAK_OBJ_SHTNULL;// "v"
+        }
+        else
+        {
+            return UNDEFINED;// "U" ex : __libc_start_main qui a un lien STB_GLOBAL
+        }
+    }
+    if (ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_GNU_IFUNC)
+        return INDIRECT_FUN;// "i"
+    if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_WEAK)
+    {
+        if (ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_OBJECT)
+            return WEAK_OBJ;// "V"
+        else
+            return WEAK_NOTYPE;// "W" => ne peut que être ça car "v" et "w" ont une précédence dans le traitement (on a le cas particulier de U dedans)
+    }
+    if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GNU_UNIQUE)
+        return UNIQUE;// "u"
+    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".data") \
+        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".fini_array") \
+        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".init_array") \
+        || !strncmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".got", 4) \
+        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".dynamic"))
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
+            return DATA_GLOB;// "D"
+        else
+            return DATA_LOC;// "d"
+    }
+    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".bss"))
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
+            return BSS_GLOB;// "B"
+        else
+            return BSS_LOC;// "b"
+    }
+    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".sbss"))
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
+            return SMALL_BSS_GLOB;// "S"
+        else
+            return SMALL_BSS_LOC;// "s"
+    }
+    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".sdata"))
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
+            return SDATA_GLOB;// "G"
+        else
+            return SDATA_LOC;// "g"
+    }
+    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".text") \
+        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".fini") \
+        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".init"))
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
+            return TEXT_GLOB;// "T"
+        else
+            return TEXT_LOC;// "t"
+    }
+    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".rodata") \
+        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".rodata1") \
+        || get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHT_NOTE \
+        || !strncmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".eh_frame", 9))
+    {
+        if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
+            return READ_ONLY_GLOB;// "R"
+        else
+            return READ_ONLY_LOC;// "r"
+    }
+    return UNKNOWN;// "?"
+}
+    
+int parse_symbols_64(ELF_datas_64 *elf_datas)
+{
+    int i = 0;// pas -1 car on sait que la première section est à passer. cf proch. boucle while
+    int res;
+    int nbsym = 0;
+    elf_datas->symbol_list = malloc(sizeof(Sym_list));
+    if( elf_datas->symbol_list == NULL)
+        return ERROR;
+    elf_datas->symbol_list->last_sym = NULL;
+    elf_datas->symbol_list->first_sym = NULL;
+    /*nécessaire pour ret. une erreur descriptive plutôt que de faire un simple check dans la boucle while.*/
+    if (elf_datas->shdr_64 == NULL || &elf_datas->symtab_hdr_64[i + 1] == NULL)
+        return print_err(0, NO_SYMBOL);
+    while (++i < (int)elf_datas->nb_of_symbols_64)
+    {
+        /*les types STT_SECTION et STT_FILE ne sont pas dans nm option (sans le -a)*/
+        if (ELF64_ST_TYPE(elf_datas->symtab_hdr_64[i].st_info) == STT_SECTION \
+        || ELF64_ST_TYPE(elf_datas->symtab_hdr_64[i].st_info) == STT_FILE)
+            continue;
+        /*nm sans options n"affiche pas les symboles de debug ou de type eh_frame, mais ils sont valides pour autant :
+        on les vire dès maintenant afin de ne pas les traiter dans la suite des fonctions*/
+        if (!strncmp(get_section_name_by_idx_64(elf_datas, elf_datas->symtab_hdr_64[i].st_shndx), ".debug", 6))
+            continue;
+        res = new_symbol_pushback(elf_datas->symbol_list);//  ajout d"un noeud dans la liste
+        if (res == ERROR)
+            return ERROR;
+        elf_datas->symbol_list->last_sym->addr = parse_symbol_address_64(&elf_datas->symtab_hdr_64[i]);
+        if (elf_datas->symbol_list->last_sym->addr == NULL)
+            return ERROR;
+        if (&elf_datas->string_table[elf_datas->symtab_hdr_64[i].st_name])
+            elf_datas->symbol_list->last_sym->name = ft_strdup((char *)(&elf_datas->string_table[elf_datas->symtab_hdr_64[i].st_name]));
+        else
+            elf_datas->symbol_list->last_sym->name = ft_strdup("");
+        if (elf_datas->symbol_list->last_sym->name == NULL)
+            return ERROR;
+        elf_datas->symbol_list->last_sym->letter = parse_symbol_letter_64(elf_datas, &elf_datas->symtab_hdr_64[i]);
+        if (elf_datas->symbol_list->last_sym->letter == 0)
+            return ERROR;
+        nbsym++;
+        printf("%s %c %s\n",elf_datas->symbol_list->last_sym->addr, elf_datas->symbol_list->last_sym->letter, elf_datas->symbol_list->last_sym->name);
+    }
+    // printf("nb de sym : %d", nbsym);
+    return SUCCESS;
+}
