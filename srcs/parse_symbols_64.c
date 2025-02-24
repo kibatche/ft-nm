@@ -44,11 +44,13 @@ char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
         return UNKNOWN;// "?" => ne devrait jamais arriver dans ces conditons avec nm sans options.
     else if (get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHN_ABS)
         return ABSOLUTE;//"A"
+    Elf64_Shdr *curr_section = get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx);
+    const char * section_name = (const char *)get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx);
     if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL \
     && ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_OBJECT \
-    && get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHN_COMMON)
+    && curr_section->sh_type == SHN_COMMON)
         return COMMON_GLOB;// "C", "c" ne peut pas exister de nos jours car les sections.scommon sont automatiquement ajoutées à .sbss
-    if (get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHT_NULL)
+    if (curr_section->sh_type == SHT_NULL)
     {
         if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_WEAK)
         {
@@ -73,51 +75,62 @@ char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
     }
     if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GNU_UNIQUE)
         return UNIQUE;// "u"
-    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".data") \
-        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".fini_array") \
-        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".init_array") \
-        || !strncmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".got", 4) \
-        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".dynamic"))
+    if (!strcmp(section_name, ".data") \
+        || !strcmp(section_name, ".fini_array") \
+        || !strcmp(section_name, ".init_array") \
+        || !strncmp(section_name, ".got", 4) \
+        || !strcmp(section_name, ".dynamic") \
+        || (curr_section->sh_type == SHT_PROGBITS \
+        && (curr_section->sh_flags & SHF_ALLOC) && (curr_section->sh_flags &  SHF_WRITE)))//man elf.h
     {
         if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
             return DATA_GLOB;// "D"
         else
             return DATA_LOC;// "d"
     }
-    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".bss"))
+    if (!strcmp(section_name, ".bss") || \
+        (curr_section->sh_type == SHT_NOBITS \
+        && (curr_section->sh_flags & SHF_ALLOC) \
+        && (curr_section->sh_flags & SHF_WRITE)))//man elf.h
     {
         if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
             return BSS_GLOB;// "B"
         else
             return BSS_LOC;// "b"
     }
-    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".sbss"))
+    if (!strcmp(section_name, ".sbss"))
     {
         if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
             return SMALL_BSS_GLOB;// "S"
         else
             return SMALL_BSS_LOC;// "s"
     }
-    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".sdata"))
+    if (!strcmp(section_name, ".sdata"))
     {
         if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
             return SDATA_GLOB;// "G"
         else
             return SDATA_LOC;// "g"
     }
-    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".text") \
-        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".fini") \
-        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".init"))
+    if (!strcmp(section_name, ".text") \
+        || !strcmp(section_name, ".fini") \
+        || !strcmp(section_name, ".init") \
+        || ((curr_section->sh_type == SHT_PROGBITS) \
+        && (curr_section->sh_flags & SHF_ALLOC) \
+        &&  (curr_section->sh_flags & SHF_EXECINSTR)))//man elf.h
     {
         if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
             return TEXT_GLOB;// "T"
         else
             return TEXT_LOC;// "t"
     }
-    if (!strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".rodata") \
-        || !strcmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".rodata1") \
-        || get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHT_NOTE \
-        || !strncmp(get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx), ".eh_frame", 9))
+    if (!strcmp(section_name, ".rodata") \
+        || !strcmp(section_name, ".rodata1") \
+        || curr_section->sh_type == SHT_NOTE \
+        || !strncmp(section_name, ".eh_frame", 9) \
+        || ((curr_section->sh_type == SHT_PROGBITS) \
+        && (curr_section->sh_flags & SHF_ALLOC) \
+        &&  !(curr_section->sh_flags & SHF_WRITE)))//man elf.h
     {
         if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
             return READ_ONLY_GLOB;// "R"
@@ -150,6 +163,8 @@ int parse_symbols_64(ELF_datas_64 *elf_datas)
         on les vire dès maintenant afin de ne pas les traiter dans la suite des fonctions*/
         if (!strncmp(get_section_name_by_idx_64(elf_datas, elf_datas->symtab_hdr_64[i].st_shndx), ".debug", 6))
             continue;
+        // if (strcmp(&elf_datas->string_table[elf_datas->symtab_hdr_64[i].st_name], "_cgo_9c8efe9babca_C2func_getaddrinfo"))
+        //     continue;
         res = new_symbol_pushback(elf_datas->symbol_list);//  ajout d"un noeud dans la liste
         if (res == ERROR)
             return ERROR;
