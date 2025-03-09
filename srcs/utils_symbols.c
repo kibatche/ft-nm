@@ -71,7 +71,7 @@ char *get_section_name_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx)
 	{
 		to_return = &elf_datas->shdr_64[idx];
 	}
-	else if (idx == SHN_COMMON)
+	else if (idx == SHN_COMMON)// idx == 65522 => veut dire que la symbole est attente d'une section par le linker
 		return "";
 	else
 		return NULL;
