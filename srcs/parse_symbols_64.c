@@ -49,7 +49,7 @@ char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
     && ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_OBJECT \
     && (symbol_to_parse->st_shndx == SHN_COMMON || curr_section->sh_type == SHN_COMMON))
         return COMMON_GLOB;// "C", "c" ne peut pas exister de nos jours car les sections.scommon sont automatiquement ajoutées à .sbss
-    if (curr_section->sh_type == SHT_NULL)
+    if (curr_section && curr_section->sh_type == SHT_NULL)
     {
         if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_WEAK)
         {
@@ -115,7 +115,7 @@ char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
     if (!strcmp(section_name, ".text") \
         || !strcmp(section_name, ".fini") \
         || !strcmp(section_name, ".init") \
-        || ((curr_section->sh_type == SHT_PROGBITS) \
+        || (curr_section && (curr_section->sh_type == SHT_PROGBITS) \
         && (curr_section->sh_flags & SHF_ALLOC) \
         &&  (curr_section->sh_flags & SHF_EXECINSTR)))//man elf.h
     {
@@ -128,7 +128,7 @@ char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
         || !strcmp(section_name, ".rodata1") \
         || curr_section->sh_type == SHT_NOTE \
         || !strncmp(section_name, ".eh_frame", 9) \
-        || ((curr_section->sh_type == SHT_PROGBITS) \
+        || (curr_section && (curr_section->sh_type == SHT_PROGBITS) \
         && (curr_section->sh_flags & SHF_ALLOC) \
         &&  !(curr_section->sh_flags & SHF_WRITE)))//man elf.h
     {
