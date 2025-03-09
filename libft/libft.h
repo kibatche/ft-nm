@@ -104,7 +104,7 @@ void				*ft_memalloc(int size);
 void				ft_memdel(void **p);
 void				ft_putwchar_fd(int c, int fd);
 void				ft_putchar(int c);
-int					ft_atoi_base(const char *str, int base);
+long long			ft_atoi_base(const char *str, int base);
 void				ft_putendl(char *s);
 void				ft_putnbr(int n);
 void				ft_putstr(char *s);

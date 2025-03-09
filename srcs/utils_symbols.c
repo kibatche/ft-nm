@@ -71,6 +71,8 @@ char *get_section_name_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx)
 	{
 		to_return = &elf_datas->shdr_64[idx];
 	}
+	else if (idx == SHN_COMMON)
+		return "";
 	else
 		return NULL;
 	return &elf_datas->section_strtab_64[to_return->sh_name];

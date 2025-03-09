@@ -45,9 +45,11 @@ int main(int ac, char **av)
         if (ret2 == ERROR)
             goto FREE_AND_CLOSE;
         else if (ret == 64)
-            continue;//sort_symbol_64(&elf_datas_64);
+            sort_symbol_64(&elf_datas_64);//sort_symbol_64(&elf_datas_64);
         else
-            printf("print sym 32\n"); 
+            printf("print sym 32\n");
+        if (ret == 64)
+            print_symlist(&elf_datas_64);
     FREE_AND_CLOSE:
         munmap(ptr, buf.st_size);/* on libere l'espace memoire alloue par le kernel */
         ft_clear_lst(elf_datas_32.symbol_list);

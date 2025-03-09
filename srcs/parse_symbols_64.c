@@ -39,16 +39,15 @@ char *parse_symbol_address_64(Elf64_Sym *symbol_to_parse)
 /*Fonction principale de ft_nm qui détermine la représentation du symbole analysé en fonction de diverses infos.*/
 char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
 {
-    if (symbol_to_parse == NULL || elf_datas->shdr_64 == NULL \
-        || get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx) == NULL)
-        return UNKNOWN;// "?" => ne devrait jamais arriver dans ces conditons avec nm sans options.
-    else if (get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx)->sh_type == SHN_ABS)
-        return ABSOLUTE;//"A"
+    const char *section_name = (const char *)get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx);
     Elf64_Shdr *curr_section = get_section_by_idx_64(elf_datas, symbol_to_parse->st_shndx);
-    const char * section_name = (const char *)get_section_name_by_idx_64(elf_datas, symbol_to_parse->st_shndx);
+    if (symbol_to_parse == NULL || elf_datas->shdr_64 == NULL || section_name == NULL)
+        return UNKNOWN;// "?" => ne devrait jamais arriver dans ces conditons avec nm sans options.
+    else if (curr_section && curr_section->sh_type == SHN_ABS)
+        return ABSOLUTE;//"A"
     if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL \
     && ELF64_ST_TYPE(symbol_to_parse->st_info) == STT_OBJECT \
-    && curr_section->sh_type == SHN_COMMON)
+    && (symbol_to_parse->st_shndx == SHN_COMMON || curr_section->sh_type == SHN_COMMON))
         return COMMON_GLOB;// "C", "c" ne peut pas exister de nos jours car les sections.scommon sont automatiquement ajoutées à .sbss
     if (curr_section->sh_type == SHT_NULL)
     {
@@ -81,7 +80,8 @@ char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
         || !strncmp(section_name, ".got", 4) \
         || !strcmp(section_name, ".dynamic") \
         || (curr_section->sh_type == SHT_PROGBITS \
-        && (curr_section->sh_flags & SHF_ALLOC) && (curr_section->sh_flags &  SHF_WRITE)))//man elf.h
+        && (curr_section->sh_flags & SHF_ALLOC)
+        && (curr_section->sh_flags &  SHF_WRITE)))//man elf.h
     {
         if (ELF64_ST_BIND(symbol_to_parse->st_info) == STB_GLOBAL)
             return DATA_GLOB;// "D"
@@ -155,17 +155,18 @@ int parse_symbols_64(ELF_datas_64 *elf_datas)
         return print_err(0, NO_SYMBOL);
     while (++i < (int)elf_datas->nb_of_symbols_64)
     {
-        /*les types STT_SECTION et STT_FILE ne sont pas dans nm option (sans le -a)*/
+        /*les types STT_SECTION et STT_FILE ne sont pas dans nm sans option (sans le -a)*/
         if (ELF64_ST_TYPE(elf_datas->symtab_hdr_64[i].st_info) == STT_SECTION \
         || ELF64_ST_TYPE(elf_datas->symtab_hdr_64[i].st_info) == STT_FILE)
             continue;
-        /*nm sans options n"affiche pas les symboles de debug ou de type eh_frame, mais ils sont valides pour autant :
+        /*nm sans options n"affiche pas les symboles de debug, mais ils sont valides pour autant :
         on les vire dès maintenant afin de ne pas les traiter dans la suite des fonctions*/
-        if (!strncmp(get_section_name_by_idx_64(elf_datas, elf_datas->symtab_hdr_64[i].st_shndx), ".debug", 6))
+        char *section_name = get_section_name_by_idx_64(elf_datas, elf_datas->symtab_hdr_64[i].st_shndx);
+        if (section_name && !ft_strncmp(section_name, ".debug", 6))
             continue;
         // if (strcmp(&elf_datas->string_table[elf_datas->symtab_hdr_64[i].st_name], "_cgo_9c8efe9babca_C2func_getaddrinfo"))
         //     continue;
-        res = new_symbol_pushback(elf_datas->symbol_list);//  ajout d"un noeud dans la liste
+        res = new_symbol_pushback(elf_datas->symbol_list);
         if (res == ERROR)
             return ERROR;
         elf_datas->symbol_list->last_sym->addr = parse_symbol_address_64(&elf_datas->symtab_hdr_64[i]);
@@ -181,7 +182,6 @@ int parse_symbols_64(ELF_datas_64 *elf_datas)
         if (elf_datas->symbol_list->last_sym->letter == 0)
             return ERROR;
         nbsym++;
-        printf("%s %c %s\n",elf_datas->symbol_list->last_sym->addr, elf_datas->symbol_list->last_sym->letter, elf_datas->symbol_list->last_sym->name);
     }
     // printf("nb de sym : %d", nbsym);
     return SUCCESS;

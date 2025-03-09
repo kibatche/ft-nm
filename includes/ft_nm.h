@@ -95,6 +95,14 @@ int     convert_and_fill_to_MSB_32(ELF_datas_32 *elf_datas);
 int     new_symbol_pushback(Sym_list *symbol_lst);
 void	ft_clear_lst(Sym_list *symbol_lst);
 
+/*fonctions pour le tri*/
+int alphabtical_cmp(const char *s1, const char *s2, int *tab);
+int is_pos(long long i);
+void sort_symbol_64(ELF_datas_64 *elf_datas);
+
+/*fonction pour le print*/
+void print_symlist(ELF_datas_64 *elf_datas);
+
 /*fonction d'erreur*/
 int     print_err(int e, char *err_string);
 

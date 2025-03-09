@@ -30,10 +30,10 @@ static int	int_from_base(char c)
 	return (-1);
 }
 
-int	ft_atoi_base(const char *str, int base)
+long long	ft_atoi_base(const char *str, int base)
 {
-	int	sign;
-	int	res;
+	long long	sign;
+	long long	res;
 
 	res = 0;
 	sign = 1;
@@ -46,7 +46,7 @@ int	ft_atoi_base(const char *str, int base)
 	}
 	while (*str && int_from_base(*str) != -1)
 	{
-		res = res * base + int_from_base(*str);
+		res = res * base + (long long)int_from_base(*str);
 		str++;
 	}
 	return (res * sign);
