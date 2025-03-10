@@ -18,7 +18,7 @@ typedef struct Symbol
     char            letter;
     char            *name;
     struct Symbol   *next;
-    struct Symbol   *prev; 
+    struct Symbol   *prev;
 }   Symbol;
 
 typedef struct Sym_list
@@ -96,14 +96,14 @@ int     new_symbol_pushback(Sym_list *symbol_lst);
 void	ft_clear_lst(Sym_list *symbol_lst);
 
 /*fonctions pour le tri*/
-int alphabtical_cmp(const char *s1, const char *s2, int *tab);
-int is_pos(long long i);
-void sort_symbol_64(ELF_datas_64 *elf_datas);
+int     alphabtical_cmp(const char *s1, const char *s2);
+int     is_pos(long long int i);
+void    sort_symbol_64(ELF_datas_64 *elf_datas);
 
 /*fonction pour le print*/
 void print_symlist(ELF_datas_64 *elf_datas);
 
 /*fonction d'erreur*/
-int     print_err(int e, char *err_string);
+int print_err(int e, char *err_string);
 
 #endif
