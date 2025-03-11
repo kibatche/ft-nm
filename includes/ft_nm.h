@@ -17,6 +17,7 @@ typedef struct Symbol
     char            *addr;
     char            letter;
     char            *name;
+    int             size;
     struct Symbol   *next;
     struct Symbol   *prev;
 }   Symbol;

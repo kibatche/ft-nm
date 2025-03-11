@@ -139,7 +139,7 @@ char parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse)
     }
     return UNKNOWN;// "?"
 }
-    
+
 int parse_symbols_64(ELF_datas_64 *elf_datas)
 {
     int i = 0;// pas -1 car on sait que la première section est à passer. cf proch. boucle while
@@ -181,6 +181,9 @@ int parse_symbols_64(ELF_datas_64 *elf_datas)
         elf_datas->symbol_list->last_sym->letter = parse_symbol_letter_64(elf_datas, &elf_datas->symtab_hdr_64[i]);
         if (elf_datas->symbol_list->last_sym->letter == 0)
             return ERROR;
+        elf_datas->symbol_list->last_sym->size = elf_datas->symtab_hdr_64[i].st_size;
+        // if (!strcmp(elf_datas->symbol_list->last_sym->name ,"crypto/ed25519.(*PrivateKey).Equal") || !strcmp(elf_datas->symbol_list->last_sym->name, "crypto/ed25519.PrivateKey.Equal"))
+            // printf("%s size %d\n", elf_datas->symbol_list->last_sym->name, elf_datas->symbol_list->last_sym->size );
         nbsym++;
     }
     // printf("nb de sym : %d", nbsym);
