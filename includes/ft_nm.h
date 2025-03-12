@@ -78,7 +78,7 @@ int     fill_64(ELF_datas_64 *elf_datas);
 int     convert_and_fill_to_LSB_64(ELF_datas_64 *elf_datas);
 int     convert_and_fill_to_MSB_64(ELF_datas_64 *elf_datas);
 
-/*fonctions 64 bits : Parsing des symboles*/
+/*fonctions 64 bits : Parsing des symboles 64bits*/
 char        *parse_symbol_address_64(Elf64_Sym *symbol_to_parse);
 char        parse_symbol_letter_64(ELF_datas_64 *elf_datas, Elf64_Sym *symbol_to_parse);
 int         parse_symbols_64(ELF_datas_64 *elf_datas);
@@ -86,11 +86,20 @@ Elf64_Shdr  *get_section_by_name_64(ELF_datas_64 *elf_datas, const char *name);
 Elf64_Shdr  *get_section_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx);
 char        *get_section_name_by_idx_64(ELF_datas_64 *elf_datas, unsigned int idx);
 
-/*fonctions 32 bits*/
+/*fonctions 32 bits : Parsing basique*/
 int     convert_and_fill_to_right_endianess_32(ELF_datas_32 *elf_datas, int file_endianess);
 int     fill_32(ELF_datas_32 *elf_datas);
 int     convert_and_fill_to_LSB_32(ELF_datas_32 *elf_datas);
 int     convert_and_fill_to_MSB_32(ELF_datas_32 *elf_datas);
+
+/*fonctions 32 bits : Parsing des symboles 32 bits*/
+char        *parse_symbol_address_32(Elf32_Sym *symbol_to_parse);
+char        parse_symbol_letter_32(ELF_datas_32 *elf_datas, Elf32_Sym *symbol_to_parse);
+int         parse_symbols_32(ELF_datas_32 *elf_datas);
+Elf32_Shdr  *get_section_by_name_32(ELF_datas_32 *elf_datas, const char *name);
+Elf32_Shdr  *get_section_by_idx_32(ELF_datas_32 *elf_datas, unsigned int idx);
+char        *get_section_name_by_idx_32(ELF_datas_32 *elf_datas, unsigned int idx);
+
 
 /*fonctions pour liste des symboles*/
 int     new_symbol_pushback(Sym_list *symbol_lst);
@@ -98,11 +107,19 @@ void	ft_clear_lst(Sym_list *symbol_lst);
 
 /*fonctions pour le tri*/
 int     alphabtical_cmp(const char *s1, const char *s2);
+int     coll_cmp(const char *s1, const char *s2);
+int     addr_cmp(const char *s1, const char *s2);
+int     sym_letter_cmp(const char c1, const char c2);
 int     is_pos(long long int i);
+
+/*tri 64 bits*/
 void    sort_symbol_64(ELF_datas_64 *elf_datas);
 
+/*tri 32 bits*/
+void    sort_symbol_32(ELF_datas_32 *elf_datas);
+
 /*fonction pour le print*/
-void print_symlist(ELF_datas_64 *elf_datas);
+void print_symlist(Sym_list *symbol_list);
 
 /*fonction d'erreur*/
 int print_err(int e, char *err_string);

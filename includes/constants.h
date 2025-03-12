@@ -2,7 +2,7 @@
 # define CONSTANTS_H
 
 # define REEF(x){if (x){free(x);x = NULL;}}
-# define ERROR -1
+# define ERROR 1
 # define SUCCESS 0
 # define L_ENDIAN 1
 # define B_ENDIAN 2
@@ -25,12 +25,12 @@
 # define BSS_GLOB 'B' // OK .bss
 # define BSS_LOC 'b' // OK .bss
 # define COMMON_GLOB 'C' // OK STT_OBJECT STB_GLOBAL symbol whose st_shndx field holds SHN_COMMON
-# define DATA_GLOB 'D' // OK .data 
+# define DATA_GLOB 'D' // OK .data
 # define DATA_LOC 'd' // OK .data
 # define SDATA_GLOB 'G' // OK .sdata
 # define SDATA_LOC 'g'// OK .sdata
 # define INDIRECT_FUN 'i' // OK st_shndx == STT_GNU_IFUNC (10) && STB_GLOB
-# define READ_ONLY_GLOB 'R' //OK st_shndx == .rodata || .rodata1 || 
+# define READ_ONLY_GLOB 'R' //OK st_shndx == .rodata || .rodata1 ||
 # define READ_ONLY_LOC 'r' // OK st_shndx == .rodata || .rodata1 || .note.ABI-tag (SHT_note)
 # define SMALL_BSS_GLOB 'S' // OK .sbss
 # define SMALL_BSS_LOC 's' // OK .sbss
@@ -43,7 +43,7 @@
 # define WEAK_NOTYPE_SHTNULL 'w' // OK STB_WEAK && STT_NOTYPE && section_type = SHT_NULL
 # define WEAK_NOTYPE 'W' // OK STT_WEAK && STT_NOTYPE
 # define UNKNOWN '?' // OK rien de tout au dessus
-/* DONOTUSEIT_SCOMMON : IMPOSSIBLE de nos jours. gcc/clang transforment 
+/* DONOTUSEIT_SCOMMON : IMPOSSIBLE de nos jours. gcc/clang transforment
 tous les symboles de .scommon en .bss / .data (cf. COMMON_GLOB). */
 # define DONOTUSEIT_DEBUG_SYM 'N'// st_shndx == .debug
 /*les symboles de type p (.eh_frame, .eh_framehdr)
@@ -51,7 +51,7 @@ ne sont pas pris en compte par nm sans option*/
 # define DONOTUSEIT_STACK_UNWIND 'p' // st_shndx == .eh_frame / .eh_frame_hdr
 # define DONOTUSEIT_NODATA_NOCODE_NODEBUG_RO 'n' /* type == STT_SECTION && st_shndx != .data && st_shndx != .text && st_shndx != .debug
 && section->type != SHF_WRITE && section->type != SHF_EXECINSTR*/
-# define DONOTUSEIT_SCOMMON 'c' 
+# define DONOTUSEIT_SCOMMON 'c'
 # define DONOTUSEIT_INDIRECT_SYM 'I' // Ce n'est pas à implémenter car c'est pour le format a.out
 # define DONOTUSEIT_STAB '-' // .stab section Pas à implémenter car c'est pour le format a.out
 

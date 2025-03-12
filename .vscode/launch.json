@@ -5,7 +5,7 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
-      "args": ["test_binaries/payloadDispatcher"],
+      "args": ["test_binaries/err/identversion_corrupted_x64.o"],
       "stopAtEntry": false,
       "externalConsole": false,
       "cwd": "${workspaceFolder}",

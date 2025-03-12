@@ -10,5 +10,7 @@ int print_err(int e, char *err_string)
     write(2, PRG_NAME_ENDING_ERR, 3);
     err_string ? write(2, err_string, strlen(err_string)) : write(2, s, strlen(s));
     write(2, LF, 1);
-    return ERROR;
+    if (err_string && !strcmp(err_string, NO_SYMBOL))
+        return EXIT_SUCCESS;
+    return EXIT_FAILURE;
 }

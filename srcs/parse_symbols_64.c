@@ -152,7 +152,7 @@ int parse_symbols_64(ELF_datas_64 *elf_datas)
     elf_datas->symbol_list->first_sym = NULL;
     /*nécessaire pour ret. une erreur descriptive plutôt que de faire un simple check dans la boucle while.*/
     if (elf_datas->shdr_64 == NULL || &elf_datas->symtab_hdr_64[i + 1] == NULL)
-        return print_err(0, NO_SYMBOL);
+        return print_err(0, FILE_FORMAT_NOT_RECOGNIZED);
     while (++i < (int)elf_datas->nb_of_symbols_64)
     {
         /*les types STT_SECTION et STT_FILE ne sont pas dans nm sans option (sans le -a)*/
@@ -169,9 +169,8 @@ int parse_symbols_64(ELF_datas_64 *elf_datas)
         res = new_symbol_pushback(elf_datas->symbol_list);
         if (res == ERROR)
             return ERROR;
-        elf_datas->symbol_list->last_sym->addr = parse_symbol_address_64(&elf_datas->symtab_hdr_64[i]);
-        if (elf_datas->symbol_list->last_sym->addr == NULL)
-            return ERROR;
+        char *n = &elf_datas->string_table[elf_datas->symtab_hdr_64[i].st_name];
+        (void)n;
         if (&elf_datas->string_table[elf_datas->symtab_hdr_64[i].st_name])
             elf_datas->symbol_list->last_sym->name = ft_strdup((char *)(&elf_datas->string_table[elf_datas->symtab_hdr_64[i].st_name]));
         else
@@ -181,11 +180,14 @@ int parse_symbols_64(ELF_datas_64 *elf_datas)
         elf_datas->symbol_list->last_sym->letter = parse_symbol_letter_64(elf_datas, &elf_datas->symtab_hdr_64[i]);
         if (elf_datas->symbol_list->last_sym->letter == 0)
             return ERROR;
+        if (elf_datas->symbol_list->last_sym->letter == 'U')//règle à la noix...
+            elf_datas->symbol_list->last_sym->addr = ft_strdup("                ");
+        else
+            elf_datas->symbol_list->last_sym->addr = parse_symbol_address_64(&elf_datas->symtab_hdr_64[i]);
+        if (elf_datas->symbol_list->last_sym->addr == NULL)
+            return ERROR;
         elf_datas->symbol_list->last_sym->size = elf_datas->symtab_hdr_64[i].st_size;
-        // if (!strcmp(elf_datas->symbol_list->last_sym->name ,"crypto/ed25519.(*PrivateKey).Equal") || !strcmp(elf_datas->symbol_list->last_sym->name, "crypto/ed25519.PrivateKey.Equal"))
-            // printf("%s size %d\n", elf_datas->symbol_list->last_sym->name, elf_datas->symbol_list->last_sym->size );
         nbsym++;
     }
-    // printf("nb de sym : %d", nbsym);
     return SUCCESS;
 }
