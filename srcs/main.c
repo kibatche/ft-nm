@@ -21,6 +21,7 @@ int main(int ac, char **av)
         prg_name = (ac == 1 ? ASSEMBLY_OUTPUT:av[nb_of_args]);
         if (ac > 2)
         {
+            write(1, "\n", 1);
             write(1, av[nb_of_args], ft_strlen(av[nb_of_args]));
             write(1, ":\n", 2);
         }

@@ -1,5 +1,0 @@
-0000000000000000 T fill_space
-000000000000003b T fill_type_name
-                 U ft_strlen
-00000000000000d1 T hex_to_int
-0000000000000197 T int_to_hex

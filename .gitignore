@@ -2,7 +2,8 @@
 *.d
 
 # Object files
-*.o
+objs/*.o
+libft/*.o
 *.ko
 *.obj
 *.elf
@@ -24,8 +25,6 @@
 
 # Shared objects (inc. Windows DLLs)
 *.dll
-*.so
-*.so.*
 *.dylib
 
 # Executables
@@ -64,4 +63,9 @@ Doc/elf(5) - Linux manual page_fichiers/TLPI-front-cover-vsmall.png
 ft_nm_debug
 test
 ft_nm_debug
-test_binaries/test
+*.txt
+ft_nm
+lui
+moi
+res
+ft_nm

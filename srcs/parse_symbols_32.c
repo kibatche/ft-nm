@@ -146,6 +146,7 @@ int parse_symbols_32(ELF_datas_32 *elf_datas)
     int res;
     int nbsym = 0;
 
+    res = nbsym;
     elf_datas->symbol_list = malloc(sizeof(Sym_list));
     if( elf_datas->symbol_list == NULL)
         return ERROR;

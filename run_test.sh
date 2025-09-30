@@ -11,7 +11,7 @@ ENDCOLOR="\e[0m"
 
 # Paths to the programs
 NM="/usr/bin/nm"
-FT_NM="./ft_nm_debug"
+FT_NM="./ft_nm"
 
 # Test folders
 BASE_FOLDER="./test_binaries"
@@ -89,7 +89,7 @@ test_file() {
 
 # Parse script arguments
 if [ $# -eq 1 ]; then
-    make redebug
+    make re
     case $1 in
         bin)
             echo "${BLUE}Testing executables in ${YELLOW}$BIN_FOLDER${BLUE}...${ENDCOLOR}\n"

@@ -145,6 +145,7 @@ int parse_symbols_64(ELF_datas_64 *elf_datas)
     int i = 0;// pas -1 car on sait que la première section est à passer. cf proch. boucle while
     int res;
     int nbsym = 0;
+    res = nbsym;
     elf_datas->symbol_list = malloc(sizeof(Sym_list));
     if( elf_datas->symbol_list == NULL)
         return ERROR;
